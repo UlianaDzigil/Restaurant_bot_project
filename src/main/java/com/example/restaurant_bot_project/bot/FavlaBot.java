@@ -4,15 +4,17 @@ import com.example.restaurant_bot_project.repository.Dao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ResourceUtils;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
-import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -108,6 +110,22 @@ public class FavlaBot extends TelegramLongPollingBot{
         }
     }
 
+    private void sendTablesPhoto(long chatId){
+        try {
+            SendPhoto sendPhoto = new SendPhoto();
+            sendPhoto.setChatId(String.valueOf(chatId));
+            //File file = new File();
+            //file.setFilePath("Plan.jpg");
+            File plan = ResourceUtils.getFile("src/main/resources/static/Plan.jpg");
+            sendPhoto.setPhoto(new InputFile(plan, "name"));
+            execute(sendPhoto);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void startMessage(long chatId) {
         String text = "You are welcomed by cafe Favla. In this bot you can book a table, to do this, first enter the mail to which the reservation will be created";
         sendMessage(chatId, text);
@@ -118,7 +136,7 @@ public class FavlaBot extends TelegramLongPollingBot{
         reservation.setEmail(text);
         reservation.setTelegram(String.valueOf(chatId));
 
-        dao.setEmail(reservation);
+        //dao.setEmail(reservation);
 
         String message = "Great, now enter your phone number so we can contact you if needed.  Enter it in the format (XXX)-XXX-XX-XX";
         sendMessage(chatId, message);
@@ -178,7 +196,7 @@ public class FavlaBot extends TelegramLongPollingBot{
         // выберите время дня
         //тут пользователю должно отправляться сообщение с кнопками доступного времени
 
-        String message = "Good, just a few steps left. Chose time";
+        String message = "Good, just a few steps left. Choose time";
         List<String> times = new ArrayList<>();
         times.add("11:00-13:00");
         times.add("13:00-15:00");
@@ -214,6 +232,13 @@ public class FavlaBot extends TelegramLongPollingBot{
         // выберите из доступных столов из базы
         // sql запрос с
         //тут пользователю должно отправляться сообщение с кнопками доступных столов с картинкой
+        String message = "Choose table";
+        sendTablesPhoto(chatId);
+        //картинка
+        //в бд найти доступные столы по дате и времени
+        List<String> tables = new ArrayList<>();
+        String action = "/table";
+        sendButttonsMessage(chatId, message, tables, action);
     }
 
     private void choseTable(long chatId, String text) {

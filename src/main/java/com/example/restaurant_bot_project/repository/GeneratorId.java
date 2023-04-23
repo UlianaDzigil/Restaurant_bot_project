@@ -1,5 +1,8 @@
 package com.example.restaurant_bot_project.repository;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class GeneratorId {
     private Integer id;
 

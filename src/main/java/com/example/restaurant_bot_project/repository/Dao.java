@@ -1,6 +1,7 @@
 package com.example.restaurant_bot_project.repository;
 
 import com.example.restaurant_bot_project.logic.Reservation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -11,6 +12,7 @@ import java.util.List;
 @Repository
 public class Dao {
 
+    @Autowired
     private GeneratorId reservationId;
 
     public Dao() {
