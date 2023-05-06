@@ -18,75 +18,39 @@ public class Dao {
     public Dao() {
     }
 
-    /*public List<Dish> getDishes(){
-        final String url = "jdbc:postgresql://db:5432/favla";
-        final String sql = "SELECT * FROM dishes";
-        final String user = "postgres";
-        final String password = "postgres";
-        ArrayList<Dish> dishes = new ArrayList<>();
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()){
-            while (rs.next()) {
-                Integer id = rs.getInt("id");
-                String name = rs.getString("name");
-                Integer cost = rs.getInt("cost_uah");
-                Integer type = rs.getInt("type_id");
-                String description = rs.getString("description");
-                String image = rs.getString("image");
-                Dish dish = new Dish(id, name, cost, type, description, image);
-
-                dishes.add(dish);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
-        return dishes;
-    }*/
-
-    /*public List<Reservation> setEmail(Reservation reservation){
-        final String url = "jdbc:postgresql://db:5432/favla";
-        final String sql = "INSERT INTO reservations(id, type)\n" +
-                "VALUES (1, 'Закуски');";
-        final String user = "postgres";
-        final String password = "postgres";
-        *//*ArrayList<Dish> dishes = new ArrayList<>();
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()){
-            while (rs.next()) {
-                Integer id = rs.getInt("id");
-                String name = rs.getString("name");
-                Integer cost = rs.getInt("cost_uah");
-                Integer type = rs.getInt("type_id");
-                String description = rs.getString("description");
-                String image = rs.getString("image");
-                Dish dish = new Dish(id, name, cost, type, description, image);
-
-                dishes.add(dish);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-*//*
-        List<Reservation> res = new ArrayList<>();
-        return res;
-    }*/
-    public void setEmail(Reservation reservation){
-        String email = reservation.getEmail();
+    public void start(Reservation reservation){
         String telegram = reservation.getTelegram();
-        Integer id = reservationId.getId();
+        //Integer id = reservationId.getId();
         final String url = "jdbc:postgresql://db:5432/favla";
-        final String sql = "INSERT INTO reservations(id, email, telegram) VALUES (?, ?, ?);";
+        //final String sql = "INSERT INTO reservations(id, telegram, is_ready) VALUES (?, ?, FALSE);";
+        final String sql = "INSERT INTO reservations( telegram, is_ready) VALUES ( ?, FALSE);";
         final String user = "postgres";
         final String password = "postgres";
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            ps.setString(2, email);
-            ps.setString(3, telegram);
+            //ps.setInt(1, id);
+            //ps.setString(2, telegram);
+            ps.setString(1, telegram);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
+    public void setEmail(Reservation reservation){
+        String email = reservation.getEmail();
+        List<Integer> idList = getNotReadyReservationIdByTelegram(reservation);
+        Integer id = idList.get(0);
+        final String url = "jdbc:postgresql://db:5432/favla";
+        final String sql = "UPDATE reservations SET email = ? WHERE id = ?;";
+        final String user = "postgres";
+        final String password = "postgres";
+
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(2, id);
+            ps.setString(1, email);
             ps.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -99,7 +63,6 @@ public class Dao {
         List<Integer> idList = getNotReadyReservationIdByTelegram(reservation);
         Integer id = idList.get(0);
         final String url = "jdbc:postgresql://db:5432/favla";
-        /*final String sql = "INSERT INTO reservations(id, phone) VALUES (?, ?);";*/
         final String sql = "UPDATE reservations SET phone = ? WHERE id = ?;";
         final String user = "postgres";
         final String password = "postgres";
@@ -119,7 +82,6 @@ public class Dao {
         List<Integer> idList = getNotReadyReservationIdByTelegram(reservation);
         Integer id = idList.get(0);
         final String url = "jdbc:postgresql://db:5432/favla";
-        /*final String sql = "INSERT INTO reservations(id, reservation_date) VALUES (?, ?);";*/
         final String sql = "UPDATE reservations SET reservation_date = ? WHERE id = ?;";
         final String user = "postgres";
         final String password = "postgres";
@@ -140,7 +102,6 @@ public class Dao {
         Integer id = idList.get(0);
         final String url = "jdbc:postgresql://db:5432/favla";
         final String sql = "UPDATE reservations SET reservation_time = ? WHERE id = ?;";
-        /*final String sql = "INSERT INTO reservations(id, reservation_time) VALUES (?, ?);";*/
         final String user = "postgres";
         final String password = "postgres";
 
@@ -160,7 +121,6 @@ public class Dao {
         Integer id = idList.get(0);
         final String url = "jdbc:postgresql://db:5432/favla";
         final String sql = "UPDATE reservations SET table_id = ? WHERE id = ?;";
-        /*final String sql = "INSERT INTO reservations(id, table_id) VALUES (?, ?);";*/
         final String user = "postgres";
         final String password = "postgres";
 
@@ -175,10 +135,19 @@ public class Dao {
         setReadyReservationById(id);
     }
 
+
+    public List<String> findTables(Reservation reservation){
+        List<String> emptyTables = new ArrayList<>();
+        emptyTables.add("1");
+        emptyTables.add("3");
+        emptyTables.add("4");
+        emptyTables.add("5");
+        return emptyTables;
+    }
+
     public void setReadyReservationById(Integer reservationId){
         final String url = "jdbc:postgresql://db:5432/favla";
-        final String sql = "UPDATE reservations SET isready = TRUE WHERE id = ?;";
-        /*final String sql = "INSERT INTO reservations(id, table_id) VALUES (?, ?);";*/
+        final String sql = "UPDATE reservations SET is_ready = TRUE WHERE id = ?;";
         final String user = "postgres";
         final String password = "postgres";
 
@@ -191,8 +160,15 @@ public class Dao {
         }
     }
 
-    public Reservation getReservation(Reservation reservation){
-        List<Integer> idList = getReadyReservationIdByTelegram(reservation);
+    public Integer confirmReservation(Reservation reservation){
+        List<Integer> idList = getNotReadyReservationIdByTelegram(reservation);
+        Integer id = idList.get(0);
+        setReadyReservationById(id);
+        return id;
+    }
+
+    public Reservation getNotReadyReservation(Reservation reservation){
+        List<Integer> idList = getNotReadyReservationIdByTelegram(reservation);
         Reservation reservation1 = new Reservation();
         Integer id = idList.get(idList.size() - 1);
         final String url = "jdbc:postgresql://db:5432/favla";
@@ -221,7 +197,7 @@ public class Dao {
         List<Integer> idList = new ArrayList<>();
         String telegram = reservation.getTelegram();
         final String url = "jdbc:postgresql://db:5432/favla";
-        final String sql = "SELECT * FROM reservations WHERE telegram = ? AND isready = FALSE";
+        final String sql = "SELECT * FROM reservations WHERE telegram = ? AND is_ready = FALSE";
         final String user = "postgres";
         final String password = "postgres";
         try (Connection conn = DriverManager.getConnection(url, user, password);
@@ -242,7 +218,7 @@ public class Dao {
         List<Integer> idList = new ArrayList<>();
         String telegram = reservation.getTelegram();
         final String url = "jdbc:postgresql://db:5432/favla";
-        final String sql = "SELECT * FROM reservations WHERE telegram = ? AND isready = TRUE";
+        final String sql = "SELECT * FROM reservations WHERE telegram = ? AND is_ready = TRUE";
         final String user = "postgres";
         final String password = "postgres";
         try (Connection conn = DriverManager.getConnection(url, user, password);
