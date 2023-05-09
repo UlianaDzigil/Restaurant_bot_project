@@ -214,12 +214,12 @@ public class FavlaBot extends TelegramLongPollingBot{
     private String toStringDay(int day, int month, int year){
         String d;
         String m;
-        if(day > 10){
+        if(day > 9){
             d = "" + day;
         }else {
             d ="0" + day;
         }
-        if(month > 10){
+        if(month > 9){
             m = "" + month;
         }else {
             m ="0" + month;
