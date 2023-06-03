@@ -132,17 +132,42 @@ public class Dao {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-        setReadyReservationById(id);
+        //setReadyReservationById(id);
     }
 
 
-    public List<String> findTables(Reservation reservation){
-        List<String> emptyTables = new ArrayList<>();
-        emptyTables.add("1");
-        emptyTables.add("3");
-        emptyTables.add("4");
-        emptyTables.add("5");
-        return emptyTables;
+    public ArrayList<Integer> findTables(Reservation reservation){
+        //find date and time
+        Reservation reservation1 = getNotReadyReservation(reservation);
+        String reservation_date = reservation1.getReservation_date();
+        String reservation_time = reservation1.getReservation_time();
+
+        //select free tables and add to array
+        ArrayList<Integer> tables = findFreeTables(reservation_date, reservation_time);
+
+        return tables;
+    }
+
+    public ArrayList<Integer> findFreeTables(String reservation_date, String reservation_time){
+        final String url = "jdbc:postgresql://db:5432/favla";
+        final String sql = "SELECT * FROM (SELECT id, table_id FROM reservations WHERE reservation_date=? AND reservation_time=?) r " +
+                "RIGHT JOIN tables t ON r.table_id=t.id WHERE r.table_id is null;";
+        final String user = "postgres";
+        final String password = "postgres";
+        ArrayList<Integer> tables = new ArrayList<>();
+
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, reservation_date);
+            ps.setString(2, reservation_time);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                tables.add(rs.getInt("table_number"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return tables;
     }
 
     public void setReadyReservationById(Integer reservationId){

@@ -65,10 +65,10 @@ public class FavlaBot extends TelegramLongPollingBot{
         if (update.hasCallbackQuery()) {
             CallbackQuery callback = update.getCallbackQuery();
             String text = callback.getData();
-            System.out.println("my CALLBACK: " + text);
+            //System.out.println("my CALLBACK: " + text);
             long chatId = callback.getMessage().getChatId();
             if (text.matches("^[\\/][d][a][y][^\\>]*$")) {
-                System.out.println("we in DAY block");
+                //System.out.println("we in DAY block");
                 String data = text.replace("/day ", "");
                 choseDay(chatId, data);
             } else if (text.matches("^[\\/][t][i][m][e][^\\>]*$")) {
@@ -130,7 +130,7 @@ public class FavlaBot extends TelegramLongPollingBot{
     }
 
     private void startMessage(long chatId) {
-        String text = "You are welcomed by cafe Favla. In this bot you can book a table, to do this, first enter the mail to which the reservation will be created";
+        String text = "Вас вітає кафе Favla. У цьому боті ви можете забронювати столик, для цього спочатку введіть пошту, на яку буде створено бронювання";
         sendMessage(chatId, text);
         Reservation reservation = new Reservation();
         reservation.setTelegram(String.valueOf(chatId));
@@ -143,7 +143,7 @@ public class FavlaBot extends TelegramLongPollingBot{
         reservation.setTelegram(String.valueOf(chatId));
         dao.setEmail(reservation);
 
-        String message = "Great, now enter your phone number so we can contact you if needed.  Enter it in the format (XXX)-XXX-XX-XX";
+        String message = "Чудово, тепер введіть свій номер телефону, щоб ми могли з вами зв’язатися, якщо буде потрібно. Введіть його у форматі (XXX)-XXX-XX-XX";
         sendMessage(chatId, message);
     }
 
@@ -152,7 +152,7 @@ public class FavlaBot extends TelegramLongPollingBot{
         reservation.setPhone(text);
         reservation.setTelegram(String.valueOf(chatId));
         dao.setPhone(reservation);
-        String message = "Ok, now select the day you want to make a reservation";
+        String message = "Гаразд, тепер виберіть день, на який ви хочете зробити бронювання";
         //тут пользователю должно отправляться сообщение с кнопками доступной даты
         LocalDateTime now = LocalDateTime.now();
         List<String> days = new ArrayList<>();
@@ -199,7 +199,7 @@ public class FavlaBot extends TelegramLongPollingBot{
         reservation.setTelegram(String.valueOf(chatId));
         dao.setDate(reservation);
 
-        String message = "Good, just a few steps left. Choose time";
+        String message = "Добре, залишилося кілька кроків. Виберіть час";
         List<String> times = new ArrayList<>();
         times.add("11:00-13:00");
         times.add("13:00-15:00");
@@ -233,16 +233,24 @@ public class FavlaBot extends TelegramLongPollingBot{
         Reservation reservation = new Reservation();
         reservation.setReservation_time(text);
         reservation.setTelegram(String.valueOf(chatId));
-        //dao.setTime(reservation);
-        //!!!!!!!!!
-        String message = "Choose table";
-        sendTablesPhoto(chatId);
-        List<String> emptyTables = dao.findTables(reservation);
-        //в бд найти доступные столы по дате и времени
-
-        List<String> tables = new ArrayList<>();
-        String action = "/table";
-        sendButtonsMessage(chatId, message, tables, action);
+        dao.setTime(reservation);
+        String message = "Виберіть стіл";
+        ArrayList<Integer> t = dao.findTables(reservation);
+        ArrayList<String> tables = new ArrayList<>();
+        for (Integer table : t) {
+            tables.add(table.toString());
+        }
+        if(tables.isEmpty()){
+            String mes = "На даний момент немає вільних столиків, виберіть інший";
+            sendMessage(chatId, mes);
+        }else{
+            sendTablesPhoto(chatId);
+            String action = "/table";
+            sendButtonsMessage(chatId, message, tables, action);
+        }
+        //List<String> tables = new ArrayList<>();
+        //String action = "/table";
+        //sendButtonsMessage(chatId, message, tables, action);
     }
 
     private void choseTable(long chatId, String text) {
@@ -252,15 +260,15 @@ public class FavlaBot extends TelegramLongPollingBot{
         dao.setTable(reservation);
 
         Reservation res = dao.getNotReadyReservation(reservation);
-        String message = "Ok, now lets check what you choose:  " +
-                "Email: " + res.getEmail() +
-                "Phone: " + res.getPhone() +
-                "Date: " + res.getReservation_date() +
-                "Time: " + res.getReservation_time()+
-                "Table: " + res.getTable_id();
+        String message = "Гаразд, тепер давайте перевіримо, що ви вибрали:" +
+                "\nПошта: " + res.getEmail() +
+                "\nТелефон: " + res.getPhone() +
+                "\nДата: " + res.getReservation_date() +
+                "\nЧас: " + res.getReservation_time()+
+                "\nСтіл: " + res.getTable_id();
         String action = "/confirm";
         List<String> buttons = new ArrayList<>();
-        buttons.add("Confirm");
+        buttons.add("Підтвердити");
         sendButtonsMessage(chatId, message, buttons, action);
         // готово просмотрине данные регистрации
         //Пишем что регистрация готова, ее номер такой то и инструкции если мы хотим изменить резервацию
@@ -270,7 +278,7 @@ public class FavlaBot extends TelegramLongPollingBot{
         Reservation reservation = new Reservation();
         reservation.setTelegram(String.valueOf(chatId));
         Integer id = dao.confirmReservation(reservation);
-        String message = "Great, your reservation №" + id + " is confirmed!";
+        String message = "Чудово, ваше бронювання №" + id + " створено!";
         sendMessage(chatId, message);
     }
 
